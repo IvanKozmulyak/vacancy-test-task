@@ -4,4 +4,6 @@
 
     <include file="changelog/01-add-vacancies-table.xml"
             relativeToChangelogFile="true" />
+    <include file="changelog/02-add-vacancies-view-table.xml"
+            relativeToChangelogFile="true" />
 </databaseChangeLog>

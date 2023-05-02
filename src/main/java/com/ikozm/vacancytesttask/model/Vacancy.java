@@ -1,14 +1,17 @@
 package com.ikozm.vacancytesttask.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ikozm.vacancytesttask.converter.StringListConverter;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,6 +21,7 @@ import lombok.ToString;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -66,6 +70,14 @@ public class Vacancy {
     @JsonProperty("job_types")
     @Convert(converter = StringListConverter.class)
     private List<String> jobTypes;
+
+    @OneToMany(mappedBy = "vacancy", cascade = CascadeType.ALL)
+    private List<VacancyView> views = new ArrayList<>();
+
+    @JsonManagedReference
+    public List<VacancyView> getViews() {
+        return views;
+    }
 
     public void setCreatedAt(Long date) {
         this.createdAt = Instant.ofEpochMilli(date * 1000L).atZone(ZoneId.systemDefault()).toLocalDateTime();

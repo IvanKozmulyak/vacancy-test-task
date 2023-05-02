@@ -2,7 +2,9 @@ package com.ikozm.vacancytesttask.controller;
 
 import com.ikozm.vacancytesttask.model.LocationStats;
 import com.ikozm.vacancytesttask.model.Vacancy;
+import com.ikozm.vacancytesttask.model.VacancyView;
 import com.ikozm.vacancytesttask.repository.VacancyRepository;
+import com.ikozm.vacancytesttask.repository.VacancyViewRepository;
 
 import java.util.List;
 
@@ -23,10 +25,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/vacancies")
 public class VacancyController {
 
-    private final VacancyRepository vacancyRepository;
+    private final VacancyRepository     vacancyRepository;
+    private final VacancyViewRepository vacancyViewRepository;
 
-    public VacancyController(VacancyRepository vacancyRepository) {
+    public VacancyController(VacancyRepository vacancyRepository, VacancyViewRepository vacancyViewRepository) {
         this.vacancyRepository = vacancyRepository;
+        this.vacancyViewRepository = vacancyViewRepository;
     }
 
     /**
@@ -42,7 +46,9 @@ public class VacancyController {
                                  @RequestParam(defaultValue = "10") int size,
                                  @RequestParam(defaultValue = "createdAt") String sortBy) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
-        return vacancyRepository.findAll(pageable);
+        Page<Vacancy> vacancies = vacancyRepository.findAll(pageable);
+        vacancies.forEach(vacancy -> vacancyViewRepository.save(new VacancyView(vacancy)));
+        return vacancies;
     }
 
     /**
@@ -56,12 +62,14 @@ public class VacancyController {
     }
 
 
-
-//     Returns a list of top 10 vacancies.
-//     Currently commented due to lack of data from API
-//    @GetMapping("/top")
-//    public List<Vacancy> getTopJobs() {
-//        Pageable pageable = PageRequest.of(0, 10, Sort.by("views").descending());
-//        return vacancyRepository.findAll(pageable).getContent();
-//    }
+    /**
+     * Returns a list of the top jobs by views with a specified limit.
+     *
+     * @param limit the maximum number of jobs to return
+     * @return a list of the top jobs by views
+     */
+    @GetMapping("/top")
+    public List<Vacancy> getTopJobs(@RequestParam(defaultValue = "10") int limit) {
+        return vacancyRepository.findTopByViews(limit);
+    }
 }

@@ -57,4 +57,17 @@ public interface VacancyRepository extends JpaRepository<Vacancy, Long> {
             "GROUP BY location " +
             "ORDER BY job_count DESC")
     List<LocationStats> getLocationStats();
+
+    /**
+     * Returns a list of {@link LocationStats} objects containing location and vacancies count.
+     *
+     * @return A list of {@link LocationStats} objects.
+     */
+    @Query(value = "SELECT v.id, v.slug, v.title, v.company_name, v.description, v.location, v.created_at, v.remote, v.url, v.tags, v.job_types, COUNT(vv.id) AS views " +
+            "FROM vacancy v " +
+            "INNER JOIN vacancy_view vv ON v.id = vv.vacancy_id " +
+            "GROUP BY vv.id " +
+            "ORDER BY views DESC " +
+            "LIMIT :limit", nativeQuery = true)
+    List<Vacancy> findTopByViews(int limit);
 }

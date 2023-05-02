@@ -6,7 +6,9 @@ import static org.mockito.Mockito.when;
 
 import com.ikozm.vacancytesttask.model.LocationStats;
 import com.ikozm.vacancytesttask.model.Vacancy;
+import com.ikozm.vacancytesttask.model.VacancyView;
 import com.ikozm.vacancytesttask.repository.VacancyRepository;
+import com.ikozm.vacancytesttask.repository.VacancyViewRepository;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -16,22 +18,25 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class VacancyControllerTest {
 
-    private VacancyRepository vacancyRepository;
-    private VacancyController vacancyController;
+    private VacancyRepository     vacancyRepository;
+    private VacancyViewRepository vacancyViewRepository;
+    private VacancyController     vacancyController;
 
     @Before
     public void setup() {
         vacancyRepository = mock(VacancyRepository.class);
-        vacancyController = new VacancyController(vacancyRepository);
+        vacancyViewRepository = mock(VacancyViewRepository.class);
+        vacancyController = new VacancyController(vacancyRepository, vacancyViewRepository);
     }
 
     @Test
-    public void getJobs_shouldReturnListOfVacancies() {
+    public void getVacancy_shouldReturnListOfVacancies() {
         // Given
         Pageable pageable = PageRequest.of(0, 10, Sort.by("createdAt"));
         Vacancy vacancy1 = new Vacancy();
@@ -71,5 +76,50 @@ public class VacancyControllerTest {
 
         // Then
         assertEquals(expectedLocationStats, actualLocationStats);
+    }
+
+    @Test
+    public void getVacancy_shouldReturnListOfLocationStats() {
+        // Given
+        List<LocationStats> expectedLocationStats = Arrays.asList(
+                new LocationStats("Location 1", 5L),
+                new LocationStats("Location 2", 3L)
+                                                                 );
+
+        // When
+        when(vacancyRepository.getLocationStats()).thenReturn(expectedLocationStats);
+
+        List<LocationStats> actualLocationStats = vacancyController.getLocationStats();
+
+        // Then
+        assertEquals(expectedLocationStats, actualLocationStats);
+    }
+
+    @Test
+    public void getTopJobs() {
+        List<Vacancy> expectedTopJobs = new ArrayList<>();
+        Vacancy job1 = new Vacancy();
+        job1.setId(1L);
+        job1.setTitle("Software Engineer");
+        job1.setViews(List.of(new VacancyView(job1),
+                              new VacancyView(job1),
+                              new VacancyView(job1),
+                              new VacancyView(job1),
+                              new VacancyView(job1)));
+        expectedTopJobs.add(job1);
+
+        Vacancy job2 = new Vacancy();
+        job2.setId(2L);
+        job2.setTitle("Product Manager");
+        job2.setViews(List.of(new VacancyView(job1), new VacancyView(job1)));
+        expectedTopJobs.add(job2);
+
+        when(vacancyRepository.findTopByViews(2)).thenReturn(expectedTopJobs);
+
+        List<Vacancy> actualTopJobs = vacancyController.getTopJobs(2);
+
+        assertEquals(expectedTopJobs.size(), actualTopJobs.size());
+        assertEquals(expectedTopJobs.get(0).getId(), actualTopJobs.get(0).getId());
+        assertEquals(expectedTopJobs.get(1).getId(), actualTopJobs.get(1).getId());
     }
 }
